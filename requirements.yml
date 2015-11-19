@@ -1,0 +1,4 @@
+- src: sivel.newrelic
+# - src: https://github.com/sivel/ansible-newrelic
+#   version: 0.1.3
+

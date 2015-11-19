@@ -1,0 +1,61 @@
+---
+- hosts: all
+  become: true # new relic role requires root
+  # roles:
+  # - sivel.newrelic
+  
+  tasks:
+
+  - name: Set hostname
+    hostname: name="{{ hostname }}"
+
+
+  # User-related tasks
+  - name: Add users with predefined password
+    # Use passlib_hash because of this bug https://github.com/ansible/ansible/issues/11244
+    user: name={{ item.name }}
+          shell=/bin/bash
+          groups=sudo
+          append=yes
+          update_password=on_create
+          password="{{ item.sudo_password | passlib_hash('sha512') }}"
+    sudo: yes
+    with_items: "{{ users }}"
+    no_log: true
+
+  - name: Add authorized keys
+    authorized_key: user={{ item.name }} key={{ item.authorized_key_url }}
+    sudo: yes
+    with_items: "{{ users }}"
+    no_log: true
+
+
+  # Nginx tasks
+  - name: Install Nginx
+    apt: pkg=nginx state=installed update_cache=true
+    sudo: yes
+    notify: restart nginx
+
+  - name: Disable the default site
+    file: path=/etc/nginx/sites-enabled/default state=absent
+    sudo: yes
+    notify:
+    - restart nginx
+
+  - name: Add mysite directory
+    file: path=/var/www/mysite state=directory
+
+  - name: Copy mysite
+    template: src=templates/mysite/index.html dest=/var/www/mysite/index.html
+
+  - name: Nginx config for mysite
+    template: src=templates/nginx/mysite dest=/etc/nginx/sites-available/mysite.conf
+
+  - name: Enable mysite
+    file: src=/etc/nginx/sites-available/mysite.conf dest=/etc/nginx/sites-enabled/mysite state=link
+    notify: restart nginx
+
+  handlers:
+  - name: restart nginx
+    service: name=nginx state=restarted enabled=yes
+    sudo: yes

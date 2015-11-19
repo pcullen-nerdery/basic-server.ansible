@@ -1,0 +1,2 @@
+[all]
+basic-server.vagrant hostname=my-host-name ansible_ssh_user=vagrant
