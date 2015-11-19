@@ -18,3 +18,15 @@ This also assumes you know what the vault password is :)
 ansible-galaxy install -r requirements.yml
 ansible-playbook -i hosts site.yml --ask-vault-pass
 ```
+
+a few ansible ad-hoc commands
+```
+ansible all -m ping -i hosts
+
+# -s makes it run with sudo
+ansible all -s -m shell -a 'apt-get install nginx'
+ansible all -s -m apt -a 'pkg=nginx state=installed update_cache=true'
+```
+
+great tutorial 
+https://serversforhackers.com/an-ansible-tutorial
